@@ -2,6 +2,7 @@
 //
 
 #include "framework.h"
+#include <Windowsx.h>
 #include "Video-recording.h"
 #include <Magick++.h>
 
@@ -9,53 +10,72 @@
 #define TIMER_ID 1
 
 RECT rcSize;
-HDC hdcBackBuffer, hdcTable;
+HDC hdcBackBuffer, hdcArea;
 PAINTSTRUCT  ps;
 
 std::vector<Magick::Image> frames;
-int delay = 100;
-int maxFrames = 10;
-std::string resolution = "1920";
-bool flagRecording = true;
-HHOOK _hook;
+int delay = 500;
+int maxFrames = 50;
+int resolution = 1;
+bool flagRecording = false;
+bool flagMouseDown = false;
+POINT startPoint;
+POINT endPoint;
+Magick::Geometry selectedArea;
+HDC secondHdc;
+LONG width, height, offSetX, offSetY;
 
-LRESULT CALLBACK KeyDownProc(int nCode, WPARAM wParam, LPARAM lParam)
+void ResizeWnd(HWND hWnd)
 {
-    MessageBox(NULL, L"F1 is pressed!", L"key pressed", MB_ICONINFORMATION);
-    return CallNextHookEx(_hook, nCode, wParam, lParam);
+    HDC hdcWindow = GetDC(hWnd);
+
+    GetClientRect(hWnd, &rcSize);
+    
+    width = endPoint.x - startPoint.x;
+    height = endPoint.y - startPoint.y;
+    offSetX = startPoint.x;
+    offSetY = startPoint.y;
+    
+    if (width < 0)
+    {
+        width = -width;
+        offSetX = endPoint.x;
+    }
+
+    if (height < 0)
+    {
+        height = -height;
+        offSetY = endPoint.y;
+    }
+
+    if (hdcBackBuffer) DeleteDC(hdcBackBuffer);
+    hdcBackBuffer = CreateCompatibleDC(hdcWindow);
+    HBITMAP hbmBackBuffer = CreateCompatibleBitmap(hdcBackBuffer, rcSize.right - rcSize.left, rcSize.bottom - rcSize.top);
+    SelectObject(hdcBackBuffer, hbmBackBuffer);
+    DeleteObject(hbmBackBuffer);
+
+    if (hdcArea) DeleteDC(hdcArea);
+    hdcArea = CreateCompatibleDC(hdcWindow);
+    HBITMAP hbmArea;
+    hbmArea = CreateCompatibleBitmap(hdcArea, width, height);
+    SelectObject(hdcArea, hbmArea);
+    DeleteObject(hbmArea);
+    RECT rcSprite;
+    SetRect(&rcSprite, 0, 0, width, height);
+    FillRect(hdcArea, &rcSprite, (HBRUSH)GetStockObject(BLACK_BRUSH));
+    InvalidateRect(hWnd, &rcSize, true);
+
+    ReleaseDC(hWnd, hdcWindow);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    HDC          hdc;
-
     switch (msg)
     {
     case WM_TIMER:
     {
-        InvalidateRect(hWnd, &rcSize, true);
-        return 0;
-    }
-    case WM_SIZE:
-    {
-        GetClientRect(hWnd, &rcSize);
-        return 0;
-    }
-    case WM_CREATE:
-    {
-        SetTimer(hWnd, TIMER_ID, delay, NULL);
-        return 0;
-    }
-    case WM_KEYDOWN:
-    {
-        KillTimer(hWnd, TIMER_ID);
-        PostQuitMessage(0);
-        return 0;
-    }
-    case WM_PAINT:
-    {
-        BeginPaint(hWnd, &ps);
-
+        //SetActiveWindow(hWnd);
+        //InvalidateRect(hWnd, &rcSize, true);
         // Record logic
         if (frames.size() > 0 || flagRecording)
         {
@@ -63,34 +83,84 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (frames.size() < maxFrames && flagRecording)
             {
                 Image img("screenshot:");
-                img.crop(Geometry(500, 500, 200, 200));
-                //img.crop(Geometry("500x500+200+200"));
+                img.crop(selectedArea);
                 img.repage();
-                //img.trim();
-                //img.chop(Geometry("700x700"));
                 img.animationDelay(delay / 10);
                 //img.resize(Geometry(resolution));
                 frames.push_back(img);
             }
             else
             {
-                writeImages(frames.begin(), frames.end(), "D:/das.gif");
+                writeImages(frames.begin(), frames.end(), "D:/ig.gif");
                 frames.clear();
-                frames.clear();
+                flagRecording = false;
             }
         }
+        return 0;
+    }
+    case WM_CREATE:
+    {
+        SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+        LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
+        SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 50, LWA_ALPHA);
 
+        lpcs->style &= ~WS_CAPTION;
+        SetWindowLong(hWnd, GWL_STYLE, lpcs->style);
+        ResizeWnd(hWnd);
+        SetTimer(hWnd, TIMER_ID, delay, NULL);
+        return 0;
+    }
+    case WM_MOUSEMOVE:
+    {
+        endPoint.x = GET_X_LPARAM(lParam);
+        endPoint.y = GET_Y_LPARAM(lParam);
+        if (flagMouseDown) ResizeWnd(hWnd);
+        return 0;
+    }
+    case WM_LBUTTONDOWN:
+    {
+        flagMouseDown = true;
+        startPoint.x = GET_X_LPARAM(lParam);
+        startPoint.y = GET_Y_LPARAM(lParam);
+        return 0;
+    }
+    case WM_LBUTTONUP:
+    {
+        flagMouseDown = false;
+        endPoint.x = GET_X_LPARAM(lParam);
+        endPoint.y = GET_Y_LPARAM(lParam);
+        selectedArea = Magick::Geometry(width, height, offSetX, offSetY);
+        ResizeWnd(hWnd);
+
+        flagRecording = true;
+        return 0;
+    }
+    case WM_SIZE:
+    {     
+        return 0;
+    }
+    case WM_KEYDOWN:
+    {
+        //KillTimer(hWnd, TIMER_ID);
+        //PostQuitMessage(0);
+    }
+    case WM_PAINT:
+    {
+        BeginPaint(hWnd, &ps);
+        FillRect(hdcBackBuffer, &rcSize, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        BitBlt(hdcBackBuffer, offSetX, offSetY, rcSize.right - rcSize.left, rcSize.bottom - rcSize.top, hdcArea, 0, 0, SRCCOPY);
+        BitBlt(ps.hdc, 0, 0, rcSize.right - rcSize.left, rcSize.bottom - rcSize.top, hdcBackBuffer, 0, 0, SRCCOPY);
         EndPaint(hWnd, &ps);
-
         return 0;
     }
     }
-}
 
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
 int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    static TCHAR className[] = TEXT("GameClass");
-    static TCHAR windowName[] = TEXT("WinApi");
+    static TCHAR className[] = TEXT("RecorderClass");
+    static TCHAR windowName[] = TEXT("Recorder");
 
     WNDCLASSEX wcex;
 
@@ -110,14 +180,16 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     if (!RegisterClassEx(&wcex))
         return 0;
 
-    HWND hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, className, windowName, NULL, 0, 0, 0, 0, NULL, NULL, hInstance, NULL);
+    RECT resolution;
+    GetWindowRect(GetDesktopWindow(), &resolution);
+
+    HWND hWnd = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST , className, NULL,
+       SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX, 0, 0, 1920, 1080, NULL, NULL, hInstance, NULL);
     if (!hWnd)
         return 0;
 
     ShowWindow(hWnd, nShowCmd);
     UpdateWindow(hWnd);
-
-    SetWindowsHookEx(WH_KEYBOARD, KeyDownProc, NULL, 0);
 
     MSG msg;
 
