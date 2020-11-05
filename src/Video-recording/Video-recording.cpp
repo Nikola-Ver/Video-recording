@@ -1,13 +1,13 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
+#define TIMER_ID 1
+#define WORK_AREA_TRANSPARENCY_ACTIVE 20
+#define WORK_AREA_TRANSPARENCY_DISABLED 0
+
 #include "framework.h"
 #include <Windowsx.h>
 #include "Video-recording.h"
 #include <Magick++.h>
 #include <ctime>
-
-#define TIMER_ID 1
-#define WORK_AREA_TRANSPARENCY_ACTIVE 20
-#define WORK_AREA_TRANSPARENCY_DISABLED 0
 
 HWND mainHWND;
 RECT rcSize;
@@ -19,6 +19,7 @@ int maxFrames = 1000;
 bool flagRecording = false;
 bool flagMouseDown = false;
 bool flagCursorShow = true;
+bool areaIsReady = false;
 POINT startPoint;
 POINT endPoint;
 Magick::Geometry selectedArea;
@@ -40,6 +41,7 @@ void HideMainHWND()
     ResizeWnd(mainHWND);
     SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
     SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+    areaIsReady = false;
 }
 
 HHOOK _hook;
@@ -65,7 +67,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             }
             else if (kbdStruct.vkCode ==  82)
             {
-                if (!flagMouseDown) flagRecording = !flagRecording;
+                if (!flagMouseDown && areaIsReady) flagRecording = !flagRecording;
             }
         }
     }
@@ -158,6 +160,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             else
             {
                 UnHook();
+                areaIsReady = false;
                 if (flagRecording) HideMainHWND();
                 std::time_t time = std::time(0);  
                 std::tm* now = std::localtime(&time);
@@ -167,6 +170,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 writeImages(frames.begin(), frames.end(), pathToFile);
                 frames.clear();
+                if (!flagRecording) areaIsReady = true;
                 flagRecording = false;
                 SetHook();
             }
@@ -206,6 +210,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         selectedArea = Magick::Geometry(width, height, offSetX, offSetY);
         ResizeWnd(hWnd);
         SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+        areaIsReady = true;
         return 0;
     }
     case WM_SIZE:
