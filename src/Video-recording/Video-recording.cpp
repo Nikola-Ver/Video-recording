@@ -16,19 +16,22 @@ PAINTSTRUCT ps;
 
 std::vector<Magick::Image> frames;
 int maxFrames = 1000;
+LONG delay = 250;
+LONG resolution = 1;
+
 bool flagRecording = false;
 bool flagMouseDown = false;
 bool flagCursorShow = true;
 bool areaIsReady = false;
+
 POINT startPoint;
 POINT endPoint;
 Magick::Geometry selectedArea;
 HDC secondHdc;
-LONG delay = 250;
 LONG width, height, offSetX, offSetY;
-LONG resolution = 1;
-
 POINT cursorPos;
+
+std::string pathToCursor = "cursor/cur0.png";
 Magick::Image cursorIco;
 
 void ResizeWnd(HWND hWnd);
@@ -187,7 +190,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         lpcs->style &= ~WS_CAPTION;
         SetWindowLong(hWnd, GWL_STYLE, lpcs->style);
 
-        cursorIco = Magick::Image("cursor/cur1.png");
+        cursorIco = Magick::Image(pathToCursor);
         ResizeWnd(hWnd);
         SetTimer(hWnd, TIMER_ID, delay, NULL);
         return 0;
