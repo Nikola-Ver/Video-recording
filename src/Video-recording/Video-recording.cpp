@@ -63,6 +63,10 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 flagMouseDown = false;
                 HideMainHWND();
             }
+            else if (kbdStruct.vkCode ==  82)
+            {
+                if (!flagMouseDown) flagRecording = !flagRecording;
+            }
         }
     }
 
@@ -154,7 +158,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             else
             {
                 UnHook();
-                HideMainHWND();
+                if (flagRecording) HideMainHWND();
                 std::time_t time = std::time(0);  
                 std::tm* now = std::localtime(&time);
                 std::string pathToFile = "GIFs/" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) + 
@@ -202,8 +206,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         selectedArea = Magick::Geometry(width, height, offSetX, offSetY);
         ResizeWnd(hWnd);
         SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
-
-        flagRecording = true;
         return 0;
     }
     case WM_SIZE:
