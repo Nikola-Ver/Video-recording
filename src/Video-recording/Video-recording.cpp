@@ -69,6 +69,10 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             {
                 if (!flagMouseDown && areaIsReady) flagRecording = !flagRecording;
             }
+            else if (kbdStruct.vkCode == 86 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
+            {
+                PostQuitMessage(0);
+            }
         }
     }
 
