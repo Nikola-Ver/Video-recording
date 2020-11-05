@@ -16,7 +16,7 @@ std::vector<Magick::Image> frames;
 int maxFrames = 60;
 bool flagRecording = false;
 bool flagMouseDown = false;
-bool flagCursorShow = false;
+bool flagCursorShow = true;
 POINT startPoint;
 POINT endPoint;
 Magick::Geometry selectedArea;
@@ -28,8 +28,21 @@ LONG resolution = 1;
 POINT cursorPos;
 Magick::Image cursorIco;
 
+void ResizeWnd(HWND hWnd);
+void HideMainHWND()
+{
+    endPoint.x = 0;
+    endPoint.y = 0;
+    startPoint.x = 0;
+    startPoint.y = 0;
+    ResizeWnd(mainHWND);
+    SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
+    SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+}
+
 HHOOK _hook;
 KBDLLHOOKSTRUCT kbdStruct;
+
 LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (nCode >= 0)
@@ -44,8 +57,8 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             } 
             else if (kbdStruct.vkCode == VK_ESCAPE)
             {
-                SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
-                SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+                flagMouseDown = false;
+                HideMainHWND();
             }
         }
     }
@@ -58,6 +71,10 @@ void SetHook()
     _hook = SetWindowsHookEx(WH_KEYBOARD_LL, HookCallback, NULL, 0);
 }
 
+void UnHook()
+{
+    UnhookWindowsHookEx(_hook);
+}
 
 void ResizeWnd(HWND hWnd)
 {
@@ -118,10 +135,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 Image img("screenshot:");
                 img.crop(selectedArea);
                 img.repage();
+                img.compressType(MagickCore::LZWCompression);
                 if (flagCursorShow)
                 {
                     GetCursorPos(&cursorPos);
-                    img.composite(cursorIco, (cursorPos.x - offSetX), (cursorPos.y - offSetY));
+                    img.composite(cursorIco, (cursorPos.x - offSetX), (cursorPos.y - offSetY), MagickCore::PlusCompositeOp);
                 }
                 if (resolution > 1)
                 {
@@ -132,9 +150,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             else
             {
+                UnHook();
+                HideMainHWND();
                 writeImages(frames.begin(), frames.end(), "D:/new.gif");
                 frames.clear();
                 flagRecording = false;
+                SetHook();
             }
         }
         return 0;
@@ -145,7 +166,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         lpcs->style &= ~WS_CAPTION;
         SetWindowLong(hWnd, GWL_STYLE, lpcs->style);
 
-        cursorIco = Magick::Image("cursor/cur2.png");
+        cursorIco = Magick::Image("cursor/cur1.png");
         ResizeWnd(hWnd);
         SetTimer(hWnd, TIMER_ID, delay, NULL);
         return 0;
