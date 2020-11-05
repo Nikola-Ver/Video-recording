@@ -1,21 +1,17 @@
-﻿// Video-recording.cpp : Определяет точку входа для приложения.
-//
-
-#include "framework.h"
+﻿#include "framework.h"
 #include <Windowsx.h>
 #include "Video-recording.h"
 #include <Magick++.h>
 
-#define N 1
 #define TIMER_ID 1
 
 RECT rcSize;
 HDC hdcBackBuffer, hdcArea;
-PAINTSTRUCT  ps;
+PAINTSTRUCT ps;
 
 std::vector<Magick::Image> frames;
-int delay = 500;
-int maxFrames = 50;
+int delay = 10;
+int maxFrames = 30;
 int resolution = 1;
 bool flagRecording = false;
 bool flagMouseDown = false;
@@ -24,6 +20,9 @@ POINT endPoint;
 Magick::Geometry selectedArea;
 HDC secondHdc;
 LONG width, height, offSetX, offSetY;
+
+POINT cursorPos;
+Magick::Image cursorIco;
 
 void ResizeWnd(HWND hWnd)
 {
@@ -82,9 +81,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             using namespace Magick;
             if (frames.size() < maxFrames && flagRecording)
             {
+                //GetCursorPos(&cursorPos);
                 Image img("screenshot:");
                 img.crop(selectedArea);
                 img.repage();
+                //img.composite(cursorIco, (cursorPos.x - offSetX), (cursorPos.y - offSetY));
                 img.animationDelay(delay / 10);
                 //img.resize(Geometry(resolution));
                 frames.push_back(img);
@@ -100,9 +101,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CREATE:
     {
+        //cursorIco = Magick::Image("cursor/cur2.png");
         SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
         LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
-        SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 50, LWA_ALPHA);
+        SetLayeredWindowAttributes(hWnd, RGB(0,0,0), 0, LWA_COLORKEY);
 
         lpcs->style &= ~WS_CAPTION;
         SetWindowLong(hWnd, GWL_STYLE, lpcs->style);
@@ -147,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
     {
         BeginPaint(hWnd, &ps);
-        FillRect(hdcBackBuffer, &rcSize, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        FillRect(hdcBackBuffer, &rcSize, (HBRUSH)GetStockObject(WHITE_BRUSH));
         BitBlt(hdcBackBuffer, offSetX, offSetY, rcSize.right - rcSize.left, rcSize.bottom - rcSize.top, hdcArea, 0, 0, SRCCOPY);
         BitBlt(ps.hdc, 0, 0, rcSize.right - rcSize.left, rcSize.bottom - rcSize.top, hdcBackBuffer, 0, 0, SRCCOPY);
         EndPaint(hWnd, &ps);
