@@ -71,7 +71,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             }
             else if (kbdStruct.vkCode == 86 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
             {
-                PostQuitMessage(0);
+                DestroyWindow(mainHWND);
             }
         }
     }
@@ -221,10 +221,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {     
         return 0;
     }
-    case WM_KEYDOWN:
+    case WM_DESTROY:
     {
-        //KillTimer(hWnd, TIMER_ID);
-        //PostQuitMessage(0);
+        PostQuitMessage(0);
     }
     case WM_PAINT:
     {
