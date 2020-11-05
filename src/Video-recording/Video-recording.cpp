@@ -275,20 +275,17 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     SetHook();
 
     MSG msg;
-
-    while (true)
+    BOOL bRet;
+    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (bRet == -1)
         {
-            if (msg.message == WM_QUIT)
-            {
-                break;
-            }
-            else
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
+            break;
+        }
+        else
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
     }
 
