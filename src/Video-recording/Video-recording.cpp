@@ -1,7 +1,9 @@
-﻿#include "framework.h"
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include "framework.h"
 #include <Windowsx.h>
 #include "Video-recording.h"
 #include <Magick++.h>
+#include <ctime>
 
 #define TIMER_ID 1
 #define WORK_AREA_TRANSPARENCY_ACTIVE 20
@@ -153,7 +155,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 UnHook();
                 HideMainHWND();
-                writeImages(frames.begin(), frames.end(), "D:/new.gif");
+                std::time_t time = std::time(0);  
+                std::tm* now = std::localtime(&time);
+                std::string pathToFile = "GIFs/" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) + 
+                    "." + std::to_string(now->tm_year + 1900) + " (" + std::to_string(now->tm_hour) + "-" + 
+                    std::to_string(now->tm_min) + "-" + std::to_string(now->tm_sec) + ").gif";
+
+                writeImages(frames.begin(), frames.end(), pathToFile);
                 frames.clear();
                 flagRecording = false;
                 SetHook();
