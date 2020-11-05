@@ -4,25 +4,60 @@
 #include <Magick++.h>
 
 #define TIMER_ID 1
+#define WORK_AREA_TRANSPARENCY_ACTIVE 20
+#define WORK_AREA_TRANSPARENCY_DISABLED 0
 
+HWND mainHWND;
 RECT rcSize;
 HDC hdcBackBuffer, hdcArea;
 PAINTSTRUCT ps;
 
 std::vector<Magick::Image> frames;
-int delay = 10;
-int maxFrames = 30;
-int resolution = 1;
+int maxFrames = 60;
 bool flagRecording = false;
 bool flagMouseDown = false;
+bool flagCursorShow = false;
 POINT startPoint;
 POINT endPoint;
 Magick::Geometry selectedArea;
 HDC secondHdc;
+LONG delay = 10;
 LONG width, height, offSetX, offSetY;
+LONG resolution = 1;
 
 POINT cursorPos;
 Magick::Image cursorIco;
+
+HHOOK _hook;
+KBDLLHOOKSTRUCT kbdStruct;
+LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    if (nCode >= 0)
+    {
+        if (wParam == WM_KEYDOWN)
+        {
+            kbdStruct = *((KBDLLHOOKSTRUCT*)lParam);
+            if (kbdStruct.vkCode == 67 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
+            {
+                SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_ACTIVE, LWA_ALPHA);
+                SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
+            } 
+            else if (kbdStruct.vkCode == VK_ESCAPE)
+            {
+                SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
+                SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+            }
+        }
+    }
+
+    return CallNextHookEx(_hook, nCode, wParam, lParam);
+}
+
+void SetHook()
+{
+    _hook = SetWindowsHookEx(WH_KEYBOARD_LL, HookCallback, NULL, 0);
+}
+
 
 void ResizeWnd(HWND hWnd)
 {
@@ -73,7 +108,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_TIMER:
     {
-        //SetActiveWindow(hWnd);
         //InvalidateRect(hWnd, &rcSize, true);
         // Record logic
         if (frames.size() > 0 || flagRecording)
@@ -81,18 +115,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             using namespace Magick;
             if (frames.size() < maxFrames && flagRecording)
             {
-                //GetCursorPos(&cursorPos);
                 Image img("screenshot:");
                 img.crop(selectedArea);
                 img.repage();
-                //img.composite(cursorIco, (cursorPos.x - offSetX), (cursorPos.y - offSetY));
-                img.animationDelay(delay / 10);
-                //img.resize(Geometry(resolution));
+                if (flagCursorShow)
+                {
+                    GetCursorPos(&cursorPos);
+                    img.composite(cursorIco, (cursorPos.x - offSetX), (cursorPos.y - offSetY));
+                }
+                if (resolution > 1)
+                {
+                    img.resize(Geometry(std::to_string(width / resolution)));
+                }
+                img.animationDelay(delay);
                 frames.push_back(img);
             }
             else
             {
-                writeImages(frames.begin(), frames.end(), "D:/ig.gif");
+                writeImages(frames.begin(), frames.end(), "D:/new.gif");
                 frames.clear();
                 flagRecording = false;
             }
@@ -101,13 +141,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CREATE:
     {
-        //cursorIco = Magick::Image("cursor/cur2.png");
-        SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
         LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
-        SetLayeredWindowAttributes(hWnd, RGB(0,0,0), 0, LWA_COLORKEY);
-
         lpcs->style &= ~WS_CAPTION;
         SetWindowLong(hWnd, GWL_STYLE, lpcs->style);
+
+        cursorIco = Magick::Image("cursor/cur2.png");
         ResizeWnd(hWnd);
         SetTimer(hWnd, TIMER_ID, delay, NULL);
         return 0;
@@ -133,6 +171,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         endPoint.y = GET_Y_LPARAM(lParam);
         selectedArea = Magick::Geometry(width, height, offSetX, offSetY);
         ResizeWnd(hWnd);
+        SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
 
         flagRecording = true;
         return 0;
@@ -185,13 +224,15 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     RECT resolution;
     GetWindowRect(GetDesktopWindow(), &resolution);
 
-    HWND hWnd = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST , className, NULL,
-       SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX, 0, 0, 1920, 1080, NULL, NULL, hInstance, NULL);
-    if (!hWnd)
-        return 0;
+    mainHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST , className, NULL,
+       SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX, 0, 0, resolution.right, resolution.bottom, NULL, NULL, hInstance, NULL);
+    SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
 
-    ShowWindow(hWnd, nShowCmd);
-    UpdateWindow(hWnd);
+    if (!mainHWND) return 0;
+
+    ShowWindow(mainHWND, nShowCmd);
+    UpdateWindow(mainHWND);
+    SetHook();
 
     MSG msg;
 
