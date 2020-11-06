@@ -4,6 +4,7 @@
 #define WORK_AREA_TRANSPARENCY_DISABLED 0
 #define MAIN_DISABLED 0
 #define MAIN_ACTIVE 255
+#define MAX_FRAMES 10000
 
 #include "framework.h"
 #include <Windowsx.h>
@@ -17,13 +18,16 @@ HDC hdcBackBuffer, hdcArea;
 PAINTSTRUCT ps;
 
 std::vector<Magick::Image> frames;
+
 int maxFrames = 1000;
+LONG qulity = 100;
 LONG delay = 250;
 LONG resolution = 1;
+bool flagCursorShow = true;
+std::string pathToCursor = "cursor/cur0.png";
 
 bool flagRecording = false;
 bool flagMouseDown = false;
-bool flagCursorShow = true;
 bool areaIsReady = false;
 bool flagMainHWND = false;
 
@@ -34,7 +38,6 @@ HDC secondHdc;
 LONG width, height, offSetX, offSetY;
 POINT cursorPos;
 
-std::string pathToCursor = "cursor/cur0.png";
 Magick::Image cursorIco;
 
 HWND MainHWND;
@@ -163,12 +166,10 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_TIMER:
     {
-        //InvalidateRect(hWnd, &rcSize, true);
-        // Record logic
         if (frames.size() > 0 || flagRecording)
         {
             using namespace Magick;
-            if (frames.size() < maxFrames && flagRecording)
+            if (frames.size() < maxFrames && frames.size() < MAX_FRAMES && flagRecording)
             {
                 Image img("screenshot:");
                 img.crop(selectedArea);
@@ -183,6 +184,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 {
                     img.resize(Geometry(std::to_string(width / resolution)));
                 }
+                img.quality(qulity);
                 img.animationDelay(delay / 10);
                 frames.push_back(img);
             }
@@ -191,6 +193,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 UnHook();
                 areaIsReady = false;
                 if (flagRecording) HideMainHWND();
+
                 std::time_t time = std::time(0);  
                 std::tm* now = std::localtime(&time);
                 std::string pathToFile = "GIFs/" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) + 
@@ -352,6 +355,6 @@ void CreateMainHWND()
 
     RegisterClassEx(&wcex);
     MainHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST,
-        L"Video-Recoding", NULL, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 800, 800, NULL, NULL, NULL, NULL);
+        L"Video-Recoding", NULL, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU & ~WS_CAPTION, 0, 0, 400, 400, NULL, NULL, NULL, NULL);
     SetLayeredWindowAttributes(MainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
 }
