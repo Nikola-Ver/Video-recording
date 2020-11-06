@@ -2,6 +2,8 @@
 #define TIMER_ID 1
 #define WORK_AREA_TRANSPARENCY_ACTIVE 20
 #define WORK_AREA_TRANSPARENCY_DISABLED 0
+#define MAIN_DISABLED 0
+#define MAIN_ACTIVE 255
 
 #include "framework.h"
 #include <Windowsx.h>
@@ -9,7 +11,7 @@
 #include <Magick++.h>
 #include <ctime>
 
-HWND mainHWND;
+HWND areaHWND;
 RECT rcSize;
 HDC hdcBackBuffer, hdcArea;
 PAINTSTRUCT ps;
@@ -23,6 +25,7 @@ bool flagRecording = false;
 bool flagMouseDown = false;
 bool flagCursorShow = true;
 bool areaIsReady = false;
+bool flagMainHWND = false;
 
 POINT startPoint;
 POINT endPoint;
@@ -34,16 +37,21 @@ POINT cursorPos;
 std::string pathToCursor = "cursor/cur0.png";
 Magick::Image cursorIco;
 
-void ResizeWnd(HWND hWnd);
+HWND MainHWND;
+HINSTANCE hInstanceGlobal;
+
+void CreateMainHWND();
+void ResizeWnd(HWND);
+
 void HideMainHWND()
 {
     endPoint.x = 0;
     endPoint.y = 0;
     startPoint.x = 0;
     startPoint.y = 0;
-    ResizeWnd(mainHWND);
-    SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
-    SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+    ResizeWnd(areaHWND);
+    SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
+    SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
     areaIsReady = false;
 }
 
@@ -59,8 +67,8 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             kbdStruct = *((KBDLLHOOKSTRUCT*)lParam);
             if (kbdStruct.vkCode == 67 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
             {
-                SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_ACTIVE, LWA_ALPHA);
-                SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
+                SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_ACTIVE, LWA_ALPHA);
+                SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
             } 
             else if (kbdStruct.vkCode == VK_ESCAPE)
             {
@@ -74,7 +82,21 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             }
             else if (kbdStruct.vkCode == 86 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
             {
-                DestroyWindow(mainHWND);
+                DestroyWindow(areaHWND);
+            }
+            else if (kbdStruct.vkCode == 79 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
+            {
+                if (!flagMainHWND)
+                {
+                    SetLayeredWindowAttributes(MainHWND, NULL, MAIN_ACTIVE, LWA_ALPHA);
+                    SetWindowLong(MainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
+                }
+                else
+                {
+                    SetLayeredWindowAttributes(MainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+                    SetWindowLong(MainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+                }
+                flagMainHWND = !flagMainHWND;
             }
         }
     }
@@ -135,7 +157,7 @@ void ResizeWnd(HWND hWnd)
     ReleaseDC(hWnd, hdcWindow);
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
@@ -224,6 +246,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {     
         return 0;
     }
+    case WM_CLOSE:
+    {
+        return 0;
+    }
     case WM_DESTROY:
     {
         PostQuitMessage(0);
@@ -241,10 +267,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
 int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    static TCHAR className[] = TEXT("RecorderClass");
-    static TCHAR windowName[] = TEXT("Recorder");
+    static TCHAR className[] = TEXT("RecorderAreaClass");
+    static TCHAR windowName[] = TEXT("AreaRecorder");
 
     WNDCLASSEX wcex;
 
@@ -252,11 +279,11 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.cbWndExtra = 0;
     wcex.hbrBackground = NULL;
-    wcex.hCursor = LoadCursor(hInstance, IDC_ARROW);
+    wcex.hCursor = LoadCursor(hInstance, IDC_CROSS);
     wcex.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
     wcex.hIconSm = NULL;
     wcex.hInstance = hInstance;
-    wcex.lpfnWndProc = WndProc;
+    wcex.lpfnWndProc = AreaWndProc;
     wcex.lpszClassName = className;
     wcex.lpszMenuName = NULL;
     wcex.style = 0;
@@ -264,33 +291,67 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     if (!RegisterClassEx(&wcex))
         return 0;
 
+    hInstanceGlobal = hInstance;
+    CreateMainHWND();
+
     RECT resolution;
     GetWindowRect(GetDesktopWindow(), &resolution);
 
-    mainHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST , className, NULL,
+    areaHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST, className, NULL,
        SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX, 0, 0, resolution.right, resolution.bottom, NULL, NULL, hInstance, NULL);
-    SetLayeredWindowAttributes(mainHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
+    SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
 
-    if (!mainHWND) return 0;
+    if (!areaHWND) return 0;
 
-    ShowWindow(mainHWND, nShowCmd);
-    UpdateWindow(mainHWND);
+    ShowWindow(areaHWND, nShowCmd);
+    UpdateWindow(areaHWND);
     SetHook();
 
     MSG msg;
-    BOOL bRet;
-    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
+    while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (bRet == -1)
-        {
-            break;
-        }
-        else
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
     return msg.wParam;
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_CLOSE:
+    {
+        SetLayeredWindowAttributes(MainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+        SetWindowLong(MainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+        flagMainHWND = false;
+        return 0;
+    }
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+void CreateMainHWND()
+{
+    WNDCLASSEX wcex;
+
+    wcex.cbClsExtra = 0;
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.cbWndExtra = 0;
+    wcex.hbrBackground = NULL;
+    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcex.hIcon = NULL;
+    wcex.hIconSm = NULL;
+    wcex.hInstance = hInstanceGlobal;
+    wcex.lpfnWndProc = WndProc;
+    wcex.lpszClassName = L"Video-Recoding";
+    wcex.lpszMenuName = NULL;
+    wcex.style = 0;
+
+    RegisterClassEx(&wcex);
+    MainHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST,
+        L"Video-Recoding", NULL, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 800, 800, NULL, NULL, NULL, NULL);
+    SetLayeredWindowAttributes(MainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
 }
