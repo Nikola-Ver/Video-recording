@@ -11,6 +11,7 @@
 #include "Video-recording.h"
 #include <Magick++.h>
 #include <ctime>
+#include <fstream>
 
 HWND areaHWND;
 RECT rcSize;
@@ -24,12 +25,14 @@ LONG delay = 250;
 double resolution = 1;
 bool flagCursorShow = true;
 std::string pathToCursor = "cursors/cur0.png";
+std::string prevPathToCursor;
 
 bool flagRecording = false;
 bool flagMouseDown = false;
 bool areaIsReady = false;
 bool flagMainHWND = false;
 bool flagWrite = false;
+bool flagInit = false;
 
 POINT startPoint;
 POINT endPoint;
@@ -43,6 +46,11 @@ Magick::Image cursorIco;
 HWND optionsHWND;
 HINSTANCE hInstanceGlobal;
 HBITMAP hBitmap;
+HWND hwndMaxFrames;
+HWND hwndFramesDelay;
+HWND hwndResolutionCompression;
+HWND hwndFlagCursor;
+HWND hwndPathToCursor;
 
 void CreateMainHWND();
 void ResizeWnd(HWND);
@@ -230,6 +238,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CREATE:
     {
+        std::ifstream file;
         try
         {
             cursorIco = Magick::Image(pathToCursor);
@@ -239,8 +248,32 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             MessageBox(NULL, L"Cursor not found", L"ERROR", MB_ICONERROR);
             flagCursorShow = false;
         }
+
+        try
+        {
+            file.open("options.dat");
+            file >> maxFrames >> delay >> resolution >> flagCursorShow >> pathToCursor;
+        } 
+        catch(...) { }
+
+        file.close();
+        SetWindowText(hwndMaxFrames, (LPCWSTR)std::to_wstring(maxFrames).c_str());
+        SetWindowText(hwndFramesDelay, (LPCWSTR)std::to_wstring(delay).c_str());
+        SetWindowText(hwndResolutionCompression, (LPCWSTR)std::to_wstring(resolution).c_str());
+        SetWindowText(hwndPathToCursor, (LPCWSTR)(std::wstring(pathToCursor.begin(), pathToCursor.end())).c_str());
+        if (flagCursorShow)
+        {
+            SendMessage(hwndFlagCursor, CB_SETCURSEL, 0, 0);
+        }
+        else
+        {
+            SendMessage(hwndFlagCursor, CB_SETCURSEL, 1, 0);
+        }
+
         ResizeWnd(hWnd);
         SetTimer(hWnd, TIMER_ID, delay, NULL);
+        flagInit = true;
+        prevPathToCursor = pathToCursor;
         return 0;
     }
     case WM_MOUSEMOVE:
@@ -278,6 +311,10 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_DESTROY:
     {
+        std::ofstream myfile;
+        myfile.open("options.dat");
+        myfile << maxFrames << " " << delay << " " << resolution << " " << flagCursorShow << " " << pathToCursor << " ";
+        myfile.close();
         PostQuitMessage(0);
     }
     case WM_PAINT:
@@ -392,6 +429,64 @@ LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     break;
     case WM_COMMAND:
     {
+        if (!flagInit) break;
+        std::string buffStr;
+        std::wstring buffWStr;
+        wchar_t buffW[1024];
+
+        GetWindowText(hwndMaxFrames, buffW, 1024);
+        buffWStr = std::wstring(buffW);
+        buffStr = std::string(buffWStr.begin(), buffWStr.end());
+        try
+        {
+            maxFrames = std::stoi(buffStr);
+        }
+        catch (...) { }
+
+        GetWindowText(hwndFramesDelay, buffW, 1024);
+        buffWStr = std::wstring(buffW);
+        buffStr = std::string(buffWStr.begin(), buffWStr.end());
+        try
+        {
+            delay = std::stol(buffStr);
+        }
+        catch (...) {}
+
+        GetWindowText(hwndResolutionCompression, buffW, 1024);
+        buffWStr = std::wstring(buffW);
+        buffStr = std::string(buffWStr.begin(), buffWStr.end());
+        try
+        {
+            resolution = std::stol(buffStr);
+        }
+        catch (...) {}
+
+        GetWindowText(hwndPathToCursor, buffW, 1024);
+        buffWStr = std::wstring(buffW);
+        pathToCursor = std::string(buffWStr.begin(), buffWStr.end());
+
+        ComboBox_GetLBText(hwndFlagCursor, ComboBox_GetCurSel(hwndFlagCursor), buffW);
+        buffWStr = std::wstring(buffW);
+
+        if (buffWStr == L"Enabled")
+        {
+            flagCursorShow = true;
+        }
+        else
+        {
+            flagCursorShow = false;
+        }
+
+        if (prevPathToCursor != pathToCursor)
+        {
+            prevPathToCursor = pathToCursor;
+            try
+            {
+                cursorIco = Magick::Image(pathToCursor);
+            }
+            catch (...) { }
+        }
+
         return 0;
     }
     }
@@ -426,27 +521,26 @@ void CreateMainHWND()
     strcpy((char*)logFont.lfFaceName, "Aria");
     auto hfont = CreateFontIndirect(&logFont);
 
-    HWND hwndMaxFrames = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+    hwndMaxFrames = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
         167, 202, 180, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndMaxFrames, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
-    HWND hwndFramesDelay = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+    hwndFramesDelay = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
         180, 263, 142, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndFramesDelay, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
-    HWND hwndResolutionCompression = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+    hwndResolutionCompression = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
         277, 329, 70, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndResolutionCompression, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
-    HWND hwndFlagCursor = CreateWindow(L"COMBOBOX", L"", WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_CHILD,
+    hwndFlagCursor = CreateWindow(L"COMBOBOX", L"", WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_CHILD,
         167, 389, 186, 100, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndFlagCursor, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
     SendMessage(hwndFlagCursor, CB_ADDSTRING, 0, (LPARAM)TEXT("Enabled"));
     SendMessage(hwndFlagCursor, CB_ADDSTRING, 0, (LPARAM)TEXT("Disabled"));
-    SendMessage(hwndFlagCursor, CB_SETCURSEL, 1, 0);
 
-    HWND hwndPathToCursor = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_AUTOHSCROLL | WS_CHILD,
+    hwndPathToCursor = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_AUTOHSCROLL | WS_CHILD,
         120, 454, 227, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndPathToCursor, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 }
