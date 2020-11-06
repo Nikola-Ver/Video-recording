@@ -20,7 +20,6 @@ PAINTSTRUCT ps;
 std::vector<Magick::Image> frames;
 
 int maxFrames = 1000;
-LONG qulity = 100;
 LONG delay = 250;
 double resolution = 1;
 bool flagCursorShow = true;
@@ -41,7 +40,7 @@ POINT cursorPos;
 
 Magick::Image cursorIco;
 
-HWND mainHWND;
+HWND optionsHWND;
 HINSTANCE hInstanceGlobal;
 HBITMAP hBitmap;
 
@@ -98,13 +97,13 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             {
                 if (!flagMainHWND)
                 {
-                    SetLayeredWindowAttributes(mainHWND, NULL, MAIN_ACTIVE, LWA_ALPHA);
-                    SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
+                    SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_ACTIVE, LWA_ALPHA);
+                    SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 else
                 {
-                    SetLayeredWindowAttributes(mainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-                    SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+                    SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+                    SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 flagMainHWND = !flagMainHWND;
             }
@@ -191,7 +190,6 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 {
                     img.resize(Geometry(std::to_string(((double) width) / resolution)));
                 }
-                img.quality(qulity);
                 img.animationDelay(delay / 10);
                 frames.push_back(img);
             }
@@ -346,14 +344,17 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     return msg.wParam;
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
     case WM_CREATE:
+    {
         hBitmap = (HBITMAP)LoadImage(hInstanceGlobal, L"img/background.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
         break;
+    }
     case WM_PAINT:
+    {
         PAINTSTRUCT     ps;
         HDC             hdc;
         BITMAP          bitmap;
@@ -373,14 +374,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         EndPaint(hWnd, &ps);
         break;
+    }
     case WM_CLOSE:
     {
-        SetLayeredWindowAttributes(mainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-        SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+        SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+        SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
         flagMainHWND = false;
         return 0;
     }
+    case WM_CTLCOLOREDIT:
+    {
+        HDC hdcEdit = (HDC)wParam;
+        SetTextColor(hdcEdit, RGB(255, 255, 255));
+        SetBkColor(hdcEdit, RGB(5, 24, 16));
+        return (LONG) GetStockObject(BLACK_BRUSH);
     }
+    break;
+    case WM_COMMAND:
+    {
+        return 0;
+    }
+    }
+
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
@@ -396,14 +411,42 @@ void CreateMainHWND()
     wcex.hIcon = NULL;
     wcex.hIconSm = NULL;
     wcex.hInstance = hInstanceGlobal;
-    wcex.lpfnWndProc = WndProc;
+    wcex.lpfnWndProc = OptionsWndProc;
     wcex.lpszClassName = L"Video-Recoding";
     wcex.lpszMenuName = NULL;
     wcex.style = 0;
 
     RegisterClassEx(&wcex);
-    mainHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST,
-        L"Video-Recoding", NULL, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU & ~WS_CAPTION, 0, 0, 400, 646, NULL, NULL, NULL, NULL);
-    SetLayeredWindowAttributes(mainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-    UpdateWindow(mainHWND);
+    optionsHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST,
+        L"Video-Recoding", NULL, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU & ~WS_CAPTION, 0, 0, 413, 673, NULL, NULL, NULL, NULL);
+    SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+
+    LOGFONT logFont;
+    logFont.lfHeight = -16;
+    strcpy((char*)logFont.lfFaceName, "Aria");
+    auto hfont = CreateFontIndirect(&logFont);
+
+    HWND hwndMaxFrames = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+        167, 202, 180, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
+    SendMessage(hwndMaxFrames, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
+
+    HWND hwndFramesDelay = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+        180, 263, 142, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
+    SendMessage(hwndFramesDelay, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
+
+    HWND hwndResolutionCompression = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+        277, 329, 70, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
+    SendMessage(hwndResolutionCompression, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
+
+    HWND hwndFlagCursor = CreateWindow(L"COMBOBOX", L"", WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_CHILD,
+        167, 389, 186, 100, optionsHWND, NULL, hInstanceGlobal, NULL);
+    SendMessage(hwndFlagCursor, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
+
+    SendMessage(hwndFlagCursor, CB_ADDSTRING, 0, (LPARAM)TEXT("Enabled"));
+    SendMessage(hwndFlagCursor, CB_ADDSTRING, 0, (LPARAM)TEXT("Disabled"));
+    SendMessage(hwndFlagCursor, CB_SETCURSEL, 1, 0);
+
+    HWND hwndPathToCursor = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_AUTOHSCROLL | WS_CHILD,
+        120, 454, 227, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
+    SendMessage(hwndPathToCursor, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 }
