@@ -22,14 +22,15 @@ std::vector<Magick::Image> frames;
 int maxFrames = 1000;
 LONG qulity = 100;
 LONG delay = 250;
-LONG resolution = 1;
+double resolution = 1;
 bool flagCursorShow = true;
-std::string pathToCursor = "cursor/cur0.png";
+std::string pathToCursor = "cursors/cur0.png";
 
 bool flagRecording = false;
 bool flagMouseDown = false;
 bool areaIsReady = false;
 bool flagMainHWND = false;
+bool flagWrite = false;
 
 POINT startPoint;
 POINT endPoint;
@@ -40,8 +41,9 @@ POINT cursorPos;
 
 Magick::Image cursorIco;
 
-HWND MainHWND;
+HWND mainHWND;
 HINSTANCE hInstanceGlobal;
+HBITMAP hBitmap;
 
 void CreateMainHWND();
 void ResizeWnd(HWND);
@@ -70,6 +72,11 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             kbdStruct = *((KBDLLHOOKSTRUCT*)lParam);
             if (kbdStruct.vkCode == 67 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
             {
+                endPoint.x = 0;
+                endPoint.y = 0;
+                startPoint.x = 0;
+                startPoint.y = 0;
+                ResizeWnd(areaHWND);
                 SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_ACTIVE, LWA_ALPHA);
                 SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
             } 
@@ -91,13 +98,13 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             {
                 if (!flagMainHWND)
                 {
-                    SetLayeredWindowAttributes(MainHWND, NULL, MAIN_ACTIVE, LWA_ALPHA);
-                    SetWindowLong(MainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
+                    SetLayeredWindowAttributes(mainHWND, NULL, MAIN_ACTIVE, LWA_ALPHA);
+                    SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 else
                 {
-                    SetLayeredWindowAttributes(MainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-                    SetWindowLong(MainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+                    SetLayeredWindowAttributes(mainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+                    SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 flagMainHWND = !flagMainHWND;
             }
@@ -182,14 +189,15 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
                 if (resolution > 1)
                 {
-                    img.resize(Geometry(std::to_string(width / resolution)));
+                    img.resize(Geometry(std::to_string(((double) width) / resolution)));
                 }
                 img.quality(qulity);
                 img.animationDelay(delay / 10);
                 frames.push_back(img);
             }
-            else
+            else if (!flagWrite)
             {
+                flagWrite = true;
                 UnHook();
                 areaIsReady = false;
                 if (flagRecording) HideMainHWND();
@@ -200,22 +208,39 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     "." + std::to_string(now->tm_year + 1900) + " (" + std::to_string(now->tm_hour) + "-" + 
                     std::to_string(now->tm_min) + "-" + std::to_string(now->tm_sec) + ").gif";
 
-                writeImages(frames.begin(), frames.end(), pathToFile);
+                try 
+                {
+                    writeImages(frames.begin(), frames.end(), pathToFile);
+                }
+                catch (...)
+                {
+                    MessageBox(NULL, L"Make a GIFs folder to store GIF files", L"ERROR", MB_ICONWARNING);
+                    pathToFile = "" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) +
+                        "." + std::to_string(now->tm_year + 1900) + " (" + std::to_string(now->tm_hour) + "-" +
+                        std::to_string(now->tm_min) + "-" + std::to_string(now->tm_sec) + ").gif";
+                    writeImages(frames.begin(), frames.end(), pathToFile);
+                }
+
                 frames.clear();
                 if (!flagRecording) areaIsReady = true;
                 flagRecording = false;
                 SetHook();
+                flagWrite = false;
             }
         }
         return 0;
     }
     case WM_CREATE:
     {
-        LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
-        lpcs->style &= ~WS_CAPTION;
-        SetWindowLong(hWnd, GWL_STYLE, lpcs->style);
-
-        cursorIco = Magick::Image(pathToCursor);
+        try
+        {
+            cursorIco = Magick::Image(pathToCursor);
+        }
+        catch(...)
+        {
+            MessageBox(NULL, L"Cursor not found", L"ERROR", MB_ICONERROR);
+            flagCursorShow = false;
+        }
         ResizeWnd(hWnd);
         SetTimer(hWnd, TIMER_ID, delay, NULL);
         return 0;
@@ -301,7 +326,8 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     GetWindowRect(GetDesktopWindow(), &resolution);
 
     areaHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST, className, NULL,
-       SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX, 0, 0, resolution.right, resolution.bottom, NULL, NULL, hInstance, NULL);
+       SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION, 0, 0, 
+       resolution.right, resolution.bottom, NULL, NULL, hInstance, NULL);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
 
     if (!areaHWND) return 0;
@@ -324,15 +350,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
+    case WM_CREATE:
+        hBitmap = (HBITMAP)LoadImage(hInstanceGlobal, L"img/background.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        break;
+    case WM_PAINT:
+        PAINTSTRUCT     ps;
+        HDC             hdc;
+        BITMAP          bitmap;
+        HDC             hdcMem;
+        HGDIOBJ         oldBitmap;
+
+        hdc = BeginPaint(hWnd, &ps);
+
+        hdcMem = CreateCompatibleDC(hdc);
+        oldBitmap = SelectObject(hdcMem, hBitmap);
+
+        GetObject(hBitmap, sizeof(bitmap), &bitmap);
+        BitBlt(hdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+
+        SelectObject(hdcMem, oldBitmap);
+        DeleteDC(hdcMem);
+
+        EndPaint(hWnd, &ps);
+        break;
     case WM_CLOSE:
     {
-        SetLayeredWindowAttributes(MainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-        SetWindowLong(MainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+        SetLayeredWindowAttributes(mainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+        SetWindowLong(mainHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
         flagMainHWND = false;
         return 0;
     }
     }
-
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
@@ -354,7 +402,8 @@ void CreateMainHWND()
     wcex.style = 0;
 
     RegisterClassEx(&wcex);
-    MainHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST,
-        L"Video-Recoding", NULL, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU & ~WS_CAPTION, 0, 0, 400, 400, NULL, NULL, NULL, NULL);
-    SetLayeredWindowAttributes(MainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+    mainHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST,
+        L"Video-Recoding", NULL, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU & ~WS_CAPTION, 0, 0, 400, 646, NULL, NULL, NULL, NULL);
+    SetLayeredWindowAttributes(mainHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
+    UpdateWindow(mainHWND);
 }
