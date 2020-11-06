@@ -52,6 +52,10 @@ HWND hwndResolutionCompression;
 HWND hwndFlagCursor;
 HWND hwndPathToCursor;
 
+std::string buffStr;
+std::wstring buffWStr;
+wchar_t buffW[1024];
+
 void CreateMainHWND();
 void ResizeWnd(HWND);
 
@@ -315,6 +319,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         myfile.open("options.dat");
         myfile << maxFrames << " " << delay << " " << resolution << " " << flagCursorShow << " " << pathToCursor << " ";
         myfile.close();
+        delete buffW;
         PostQuitMessage(0);
     }
     case WM_PAINT:
@@ -430,9 +435,6 @@ LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_COMMAND:
     {
         if (!flagInit) break;
-        std::string buffStr;
-        std::wstring buffWStr;
-        wchar_t buffW[1024];
 
         GetWindowText(hwndMaxFrames, buffW, 1024);
         buffWStr = std::wstring(buffW);
