@@ -30,7 +30,7 @@ To install the program you need to download ImageMagick (<a href="https://imagem
 
 After installing ImageMagick, you can also use it as a GIF editor.
 
-Then move the Video-recording folder to a place convenient for you (well, or see below how to autoload the program), and then run the Video-recording program (Video-recording.exe).
+Then move the Video-recording folder to a place convenient for you (well, or see below how to autoload the program), and then run the Video-recording program (Video-recording.exe). Before using the program, set the screen scale to 100%.
 
 ### Installing autorun
 
