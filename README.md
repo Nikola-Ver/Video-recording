@@ -9,7 +9,7 @@ This is a convenient program for recording screens in GIF format, which takes up
 After starting the program, you can press the key combination "Shift + Win + C", select the zone (by holding down the left mouse button (if you unsuccessfully select the zone, then you need to repeat the "Shift + Win + C" key combination)) and start recording by pressing "R", if you want to cancel the selected area press the "Esc" key. To stop recording, press "Esc" (to stop recording and close the selection area) or "R" (to stop recording and save the selected area), then a notification will appear stating that recording is complete. The captured GIF is located in the program folder -> GIF. To close at all, you need to press the key combination "Shift + Win + V".
 
 <p align="center">
-<img src="report\img\O.png">
+<img src="report\img\selected_area.png">
 </p>
 
 ### Options
