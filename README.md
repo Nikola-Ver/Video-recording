@@ -22,7 +22,7 @@ In order to open the settings window, you need to press the key combination "Shi
 
 ### Installing autorun
 
-If you want to set automatic start, then move the folder with the program to drive C. Then hold down the "Win" button and press the "F2" button, enter "shell:startup" in the field that appears, then press "Enter". Then move there the file named Video-recording (Video-recording.bat), which is located in the root of the program folder. The program will now start automatically.
+If you want to set automatic start, then move the folder with the program to drive C. Then hold down the "Win" button and press the "R" button, enter "shell:startup" in the field that appears, then press "Enter". Then move there the file named Video-recording (Video-recording.bat), which is located in the root of the program folder. The program will now start automatically.
 
 #### Step by step in photos
 
