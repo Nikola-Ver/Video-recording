@@ -20,7 +20,7 @@ In order to open the settings window, you need to press the key combination "Shi
 <img src="report\img\win_option.png">
 </p>
 
-## Program installation
+### Program installation
 
 To install the program you need to download ImageMagick (<a href="https://imagemagick.org/download/binaries/ImageMagick-7.0.10-36-Q16-HDRI-x64-dll.exe">download</a>). Then install it. It is important to select all installation options for the program during installation:
 
@@ -28,6 +28,7 @@ To install the program you need to download ImageMagick (<a href="https://imagem
 <img src="report\img\magick_install.png">
 </p>
 
+After installing ImageMagick, you can also use it as a GIF editor.
 Then move the Video-recording folder to a place convenient for you (well, or see below how to autoload the program), and then run the Video-recording program (Video-recording.exe).
 
 ### Installing autorun
