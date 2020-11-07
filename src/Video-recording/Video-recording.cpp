@@ -14,6 +14,7 @@
 #include <fstream>
 
 HWND areaHWND;
+RECT resolutionWH;
 RECT rcSize;
 HDC hdcBackBuffer, hdcArea;
 PAINTSTRUCT ps;
@@ -69,7 +70,9 @@ void HideMainHWND()
     startPoint.y = 0;
     ResizeWnd(areaHWND);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
-    SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE);
+    SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+    SetWindowPos(areaHWND, NULL, 0, 0, 0, 0, SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | 
+        WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION);
     areaIsReady = false;
 }
 
@@ -91,6 +94,8 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 startPoint.y = 0;
                 ResizeWnd(areaHWND);
                 SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_ACTIVE, LWA_ALPHA);
+                SetWindowPos(areaHWND, NULL, 0, 0, resolutionWH.right, resolutionWH.bottom, SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS |
+                    WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION);
                 SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
             } 
             else if (kbdStruct.vkCode == VK_ESCAPE)
@@ -113,12 +118,14 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 if (!flagMainHWND)
                 {
                     SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_ACTIVE, LWA_ALPHA);
+                    SetWindowPos(optionsHWND, NULL, 0, 0, 413, 673, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU & ~WS_CAPTION);
                     SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 else
                 {
                     SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-                    SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE);
+                    SetWindowPos(optionsHWND, NULL, 0, 0, 0, 0, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+                    SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 flagMainHWND = !flagMainHWND;
             }
@@ -241,6 +248,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetHook();
                 flagWrite = false;
                 flagEscKey = false;
+                MessageBox(NULL, L"GIF is ready", L"Notification", MB_ICONINFORMATION);
             }
         }
         return 0;
@@ -367,13 +375,11 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
 
     hInstanceGlobal = hInstance;
     CreateMainHWND();
+    GetWindowRect(GetDesktopWindow(), &resolutionWH);
 
-    RECT resolution;
-    GetWindowRect(GetDesktopWindow(), &resolution);
-
-    areaHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE, className, NULL,
+    areaHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST, className, NULL,
        SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION, 0, 0, 
-       resolution.right, resolution.bottom, NULL, NULL, hInstance, NULL);
+        resolutionWH.right, resolutionWH.bottom, NULL, NULL, hInstance, NULL);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
 
     if (!areaHWND) return 0;
@@ -426,7 +432,8 @@ LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_CLOSE:
     {
         SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-        SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE);
+        SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+        SetWindowPos(optionsHWND, NULL, 0, 0, 0, 0, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
         flagMainHWND = false;
         return 0;
     }
