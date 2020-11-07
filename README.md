@@ -22,7 +22,7 @@ In order to open the settings window, you need to press the key combination "Shi
 
 ### Program installation
 
-To install the program you need to download ImageMagick (<a href="https://imagemagick.org/download/binaries/ImageMagick-7.0.10-36-Q16-HDRI-x64-dll.exe">download</a>). Then install it. It is important to select all installation options for the program during installation:
+To install the program you need to download ImageMagick (<a href="https://imagemagick.org/download/binaries/ImageMagick-7.0.10-36-Q16-HDRI-x64-dll.exe">download</a>). Then install the program along the path "C:\Program Files". It is important to select all installation options for the program during installation:
 
 <p align="center">
 <img src="report\img\magick_install.png">
