@@ -71,7 +71,7 @@ void HideAreaHWND()
     ResizeWnd(areaHWND);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
     SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED);
-    SetWindowPos(areaHWND, NULL, 0, 0, 0, 0, WS_CLIPSIBLINGS | WS_MINIMIZEBOX | WS_MINIMIZE | WS_CLIPCHILDREN & ~WS_CAPTION);
+    SetWindowPos(areaHWND, NULL, 0, 0, resolutionWH.right, resolutionWH.bottom, SWP_HIDEWINDOW);
     areaIsReady = false;
 }
 
@@ -93,9 +93,8 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 startPoint.y = 0;
                 ResizeWnd(areaHWND);
                 SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_ACTIVE, LWA_ALPHA);
-                SetWindowPos(areaHWND, NULL, 0, 0, resolutionWH.right, resolutionWH.bottom, SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS |
-                    WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION);
                 SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
+                SetWindowPos(areaHWND, NULL, 0, 0, resolutionWH.right, resolutionWH.bottom, SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE);
             } 
             else if (kbdStruct.vkCode == VK_ESCAPE)
             {
@@ -106,7 +105,11 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             }
             else if (kbdStruct.vkCode ==  82)
             {
-                if (!flagMouseDown && areaIsReady) flagRecording = !flagRecording;
+                if (!flagMouseDown && areaIsReady)
+                {
+                    flagRecording = !flagRecording;
+                    SetTimer(areaHWND, TIMER_ID, delay, NULL);
+                }
             }
             else if (kbdStruct.vkCode == 86 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
             {
@@ -117,13 +120,13 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 if (!flagMainHWND)
                 {
                     SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_ACTIVE, LWA_ALPHA);
-                    SetWindowPos(optionsHWND, NULL, 0, 0, 413, 673, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU & ~WS_CAPTION);
+                    SetWindowPos(optionsHWND, NULL, 0, 0, 413, 673, SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE);
                     SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 else
                 {
                     SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-                    SetWindowPos(optionsHWND, NULL, 0, 0, 0, 0, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+                    SetWindowPos(optionsHWND, NULL, 0, 0, 413, 673, SWP_HIDEWINDOW);
                     SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
                 }
                 flagMainHWND = !flagMainHWND;
@@ -247,6 +250,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetHook();
                 flagWrite = false;
                 flagEscKey = false;
+                KillTimer(areaHWND, TIMER_ID);
                 MessageBox(NULL, L"GIF is ready", L"Notification", MB_ICONINFORMATION);
             }
         }
@@ -287,7 +291,6 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         ResizeWnd(hWnd);
-        SetTimer(hWnd, TIMER_ID, delay, NULL);
         flagInit = true;
         prevPathToCursor = pathToCursor;
         return 0;
@@ -376,7 +379,7 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     GetWindowRect(GetDesktopWindow(), &resolutionWH);
 
     areaHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST, className, NULL,
-       SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION, 0, 0, 
+       WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION, 0, 0, 
         resolutionWH.right, resolutionWH.bottom, NULL, NULL, hInstance, NULL);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
 
@@ -431,7 +434,7 @@ LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     {
         SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
         SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
-        SetWindowPos(optionsHWND, NULL, 0, 0, 0, 0, WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+        SetWindowPos(optionsHWND, NULL, 0, 0, 413, 673, SWP_HIDEWINDOW);
         flagMainHWND = false;
         return 0;
     }
@@ -534,26 +537,26 @@ void CreateMainHWND()
     strcpy((char*)logFont.lfFaceName, "Aria");
     auto hfont = CreateFontIndirect(&logFont);
 
-    hwndMaxFrames = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+    hwndMaxFrames = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | WS_TABSTOP | ES_AUTOHSCROLL | WS_CHILD,
         167, 202, 180, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndMaxFrames, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
-    hwndFramesDelay = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+    hwndFramesDelay = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | WS_TABSTOP | ES_AUTOHSCROLL | WS_CHILD,
         180, 263, 142, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndFramesDelay, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
-    hwndResolutionCompression = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | ES_AUTOHSCROLL | WS_CHILD,
+    hwndResolutionCompression = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_NUMBER | WS_TABSTOP | ES_AUTOHSCROLL | WS_CHILD,
         277, 329, 70, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndResolutionCompression, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
-    hwndFlagCursor = CreateWindow(L"COMBOBOX", L"", WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_CHILD,
+    hwndFlagCursor = CreateWindow(L"COMBOBOX", L"", WS_VISIBLE | WS_TABSTOP | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_CHILD,
         167, 389, 186, 100, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndFlagCursor, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 
     SendMessage(hwndFlagCursor, CB_ADDSTRING, 0, (LPARAM)TEXT("Enabled"));
     SendMessage(hwndFlagCursor, CB_ADDSTRING, 0, (LPARAM)TEXT("Disabled"));
 
-    hwndPathToCursor = CreateWindow(L"EDIT", L"", WS_VISIBLE | ES_AUTOHSCROLL | WS_CHILD,
+    hwndPathToCursor = CreateWindow(L"EDIT", L"", WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | WS_CHILD,
         120, 454, 227, 20, optionsHWND, NULL, hInstanceGlobal, NULL);
     SendMessage(hwndPathToCursor, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
 }
