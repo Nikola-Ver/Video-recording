@@ -62,7 +62,7 @@ wchar_t buffW[1024];
 void CreateMainHWND();
 void ResizeWnd(HWND);
 
-void HideMainHWND()
+void HideAreaHWND()
 { 
     endPoint.x = 0;
     endPoint.y = 0;
@@ -71,8 +71,7 @@ void HideMainHWND()
     ResizeWnd(areaHWND);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
     SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
-    SetWindowPos(areaHWND, NULL, 0, 0, 0, 0, SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | 
-        WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION);
+    SetWindowPos(areaHWND, NULL, 0, 0, 0, 0, SWP_NOMOVE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN & ~WS_CAPTION);
     areaIsReady = false;
 }
 
@@ -103,7 +102,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 flagRecording = false;
                 flagMouseDown = false;
                 flagEscKey = true;
-                HideMainHWND();
+                HideAreaHWND();
             }
             else if (kbdStruct.vkCode ==  82)
             {
@@ -221,7 +220,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 MessageBox(NULL, L"Recording is over", L"Notification", MB_ICONINFORMATION);
                 UnHook();
                 areaIsReady = false;
-                if (flagRecording) HideMainHWND();
+                if (flagRecording) HideAreaHWND();
 
                 std::time_t time = std::time(0);  
                 std::tm* now = std::localtime(&time);
@@ -333,7 +332,6 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         myfile.open("options.dat");
         myfile << maxFrames << " " << delay << " " << resolution << " " << flagCursorShow << " " << pathToCursor << " ";
         myfile.close();
-        delete buffW;
         PostQuitMessage(0);
     }
     case WM_PAINT:
