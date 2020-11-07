@@ -6,7 +6,7 @@ This is a convenient program for recording screens in GIF format, which takes up
 
 ### How to use the program
 
-After starting the program, you can press the key combination "Shift + Win + C", select the zone (by holding down the left mouse button (if you unsuccessfully select the zone, then you need to repeat the "Shift + Win + C" key combination)) and start recording by pressing "F2", if you want to cancel the selected area press the "Esc" key. To stop recording, press "Esc" (to stop recording and close the selection area) or "F2" (to stop recording and save the selected area), then a notification will appear stating that recording is complete. The captured GIF is located in the program folder -> GIF. To close at all, you need to press the key combination "Shift + Win + V".
+After starting the program, you can press the key combination "Shift + Win + C", select the zone (by holding down the left mouse button (if you unsuccessfully select the zone, then you need to repeat the "Shift + Win + C" key combination)) and start recording by pressing "F2", if you want to cancel the selected area press the key combination "Win + Esc". To stop recording, press the key combination "Win + Esc" (to stop recording and close the selection area) or "F2" (to stop recording and save the selected area), then a notification will appear stating that recording is complete. The captured GIF is located in the program folder -> GIF. To close at all, you need to press the key combination "Shift + Win + V".
 
 <p align="center">
 <img src="report\img\selected_area.png">
@@ -19,6 +19,16 @@ In order to open the settings window, you need to press the key combination "Shi
 <p align="center">
 <img src="report\img\win_option.png">
 </p>
+
+## Program installation
+
+To install the program you need to download ImageMagick (<a href="https://imagemagick.org/download/binaries/ImageMagick-7.0.10-36-Q16-HDRI-x64-dll.exe">download</a>). Then install it. It is important to select all installation options for the program during installation:
+
+<p align="center">
+<img src="report\img\magick_install.png">
+</p>
+
+Then move the Video-recording folder to a place convenient for you (well, or see below how to autoload the program), and then run the Video-recording program (Video-recording.exe).
 
 ### Installing autorun
 

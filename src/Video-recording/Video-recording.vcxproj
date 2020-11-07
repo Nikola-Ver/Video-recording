@@ -83,6 +83,8 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\Program Files\ImageMagick-7.0.10-Q16-HDRI\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files\ImageMagick-7.0.10-Q16-HDRI\lib;$(LibraryPath)</LibraryPath>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -97,7 +97,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
                 SetWindowPos(areaHWND, NULL, 0, 0, resolutionWH.right, resolutionWH.bottom, SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE);
             } 
-            else if (kbdStruct.vkCode == VK_ESCAPE)
+            else if (kbdStruct.vkCode == VK_ESCAPE && GetAsyncKeyState(VK_LWIN))
             {
                 flagRecording = false;
                 flagMouseDown = false;
@@ -202,7 +202,17 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             using namespace Magick;
             if (frames.size() < maxFrames && frames.size() * numberOfPixelsPerFrame / (resolution * resolution) < MAX_NUMBER_OF_PIXELS && flagRecording)
             {
-                Image img("screenshot:");
+                Image img;
+                try
+                {
+                    img = Image("screenshot:");
+                }
+                catch (...)
+                {
+                    flagRecording = false;
+                    MessageBox(NULL, L"Can't start recording", L"ERROR", MB_ICONERROR);
+                    return 0;
+                }
                 img.crop(selectedArea);
                 img.repage();
                 img.compressType(MagickCore::LZWCompression);
@@ -238,7 +248,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
                 catch (...)
                 {
-                    MessageBox(NULL, L"Make a GIFs folder to store GIF files", L"ERROR", MB_ICONWARNING);
+                    MessageBox(NULL, L"Make a GIFs folder to store GIF files", L"ERROR", MB_ICONERROR);
                     pathToFile = "" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) +
                         "." + std::to_string(now->tm_year + 1900) + " (" + std::to_string(now->tm_hour) + "-" +
                         std::to_string(now->tm_min) + "-" + std::to_string(now->tm_sec) + ").gif";
@@ -467,7 +477,7 @@ LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         {
             delay = std::stol(buffStr);
         }
-        catch (...) {}
+        catch (...) { }
 
         GetWindowText(hwndResolutionCompression, buffW, 1024);
         buffWStr = std::wstring(buffW);
@@ -476,7 +486,7 @@ LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         {
             resolution = std::stol(buffStr);
         }
-        catch (...) {}
+        catch (...) { }
 
         GetWindowText(hwndPathToCursor, buffW, 1024);
         buffWStr = std::wstring(buffW);
