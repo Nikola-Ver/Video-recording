@@ -92,6 +92,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 startPoint.x = 0;
                 startPoint.y = 0;
                 ResizeWnd(areaHWND);
+                flagRecording = false;
                 SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_ACTIVE, LWA_ALPHA);
                 SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_TOPMOST);
                 SetWindowPos(areaHWND, NULL, 0, 0, resolutionWH.right, resolutionWH.bottom, SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOMOVE);
@@ -103,7 +104,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 flagEscKey = true;
                 HideAreaHWND();
             }
-            else if (kbdStruct.vkCode ==  82)
+            else if (kbdStruct.vkCode ==  VK_F2)
             {
                 if (!flagMouseDown && areaIsReady)
                 {

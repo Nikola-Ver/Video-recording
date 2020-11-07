@@ -6,7 +6,7 @@ This is a convenient program for recording screens in GIF format, which takes up
 
 ### How to use the program
 
-After starting the program, you can press the key combination "Shift + Win + C", select the zone (by holding down the left mouse button (if you unsuccessfully select the zone, then you need to repeat the "Shift + Win + C" key combination)) and start recording by pressing "R", if you want to cancel the selected area press the "Esc" key. To stop recording, press "Esc" (to stop recording and close the selection area) or "R" (to stop recording and save the selected area), then a notification will appear stating that recording is complete. The captured GIF is located in the program folder -> GIF. To close at all, you need to press the key combination "Shift + Win + V".
+After starting the program, you can press the key combination "Shift + Win + C", select the zone (by holding down the left mouse button (if you unsuccessfully select the zone, then you need to repeat the "Shift + Win + C" key combination)) and start recording by pressing "F2", if you want to cancel the selected area press the "Esc" key. To stop recording, press "Esc" (to stop recording and close the selection area) or "F2" (to stop recording and save the selected area), then a notification will appear stating that recording is complete. The captured GIF is located in the program folder -> GIF. To close at all, you need to press the key combination "Shift + Win + V".
 
 <p align="center">
 <img src="report\img\selected_area.png">
@@ -22,7 +22,7 @@ In order to open the settings window, you need to press the key combination "Shi
 
 ### Installing autorun
 
-If you want to set automatic start, then move the folder with the program to drive C. Then hold down the "Win" button and press the "R" button, enter "shell:startup" in the field that appears, then press "Enter". Then move there the file named Video-recording (Video-recording.bat), which is located in the root of the program folder. The program will now start automatically.
+If you want to set automatic start, then move the folder with the program to drive C. Then hold down the "Win" button and press the "F2" button, enter "shell:startup" in the field that appears, then press "Enter". Then move there the file named Video-recording (Video-recording.bat), which is located in the root of the program folder. The program will now start automatically.
 
 #### Step by step in photos
 
