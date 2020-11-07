@@ -4,7 +4,7 @@
 #define WORK_AREA_TRANSPARENCY_DISABLED 0
 #define MAIN_DISABLED 0
 #define MAIN_ACTIVE 255
-#define MAX_FRAMES 10000
+#define MAX_NUMBER_OF_PIXELS 250000000
 
 #include "framework.h"
 #include <Windowsx.h>
@@ -39,6 +39,7 @@ POINT endPoint;
 Magick::Geometry selectedArea;
 HDC secondHdc;
 LONG width, height, offSetX, offSetY;
+LONG numberOfPixelsPerFrame;
 POINT cursorPos;
 
 Magick::Image cursorIco;
@@ -60,7 +61,7 @@ void CreateMainHWND();
 void ResizeWnd(HWND);
 
 void HideMainHWND()
-{
+{ 
     endPoint.x = 0;
     endPoint.y = 0;
     startPoint.x = 0;
@@ -187,7 +188,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (frames.size() > 0 || flagRecording)
         {
             using namespace Magick;
-            if (frames.size() < maxFrames && frames.size() < MAX_FRAMES && flagRecording)
+            if (frames.size() < maxFrames && frames.size() * numberOfPixelsPerFrame < MAX_NUMBER_OF_PIXELS && flagRecording)
             {
                 Image img("screenshot:");
                 img.crop(selectedArea);
@@ -208,6 +209,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             else if (!flagWrite)
             {
                 flagWrite = true;
+                MessageBox(NULL, L"Recording is over", L"Notification", MB_ICONINFORMATION);
                 UnHook();
                 areaIsReady = false;
                 if (flagRecording) HideMainHWND();
@@ -303,6 +305,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         ResizeWnd(hWnd);
         SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
         areaIsReady = true;
+        numberOfPixelsPerFrame = width * height;
         return 0;
     }
     case WM_SIZE:
