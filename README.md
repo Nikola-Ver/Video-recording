@@ -2,7 +2,7 @@
 
 This is a convenient program for recording screens in GIF format, which takes up little space and is easy to use.
 
-# How the program works
+## How the program works
 
 ### How to use the program
 
