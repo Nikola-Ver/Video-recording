@@ -33,6 +33,7 @@ bool areaIsReady = false;
 bool flagMainHWND = false;
 bool flagWrite = false;
 bool flagInit = false;
+bool flagEscKey = false;
 
 POINT startPoint;
 POINT endPoint;
@@ -68,7 +69,7 @@ void HideMainHWND()
     startPoint.y = 0;
     ResizeWnd(areaHWND);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
-    SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+    SetWindowLong(areaHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE);
     areaIsReady = false;
 }
 
@@ -96,6 +97,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
             {
                 flagRecording = false;
                 flagMouseDown = false;
+                flagEscKey = true;
                 HideMainHWND();
             }
             else if (kbdStruct.vkCode ==  82)
@@ -116,7 +118,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 else
                 {
                     SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-                    SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+                    SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE);
                 }
                 flagMainHWND = !flagMainHWND;
             }
@@ -234,10 +236,11 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
 
                 frames.clear();
-                if (!flagRecording) areaIsReady = true;
+                if (!flagRecording && !flagEscKey) areaIsReady = true;
                 flagRecording = false;
                 SetHook();
                 flagWrite = false;
+                flagEscKey = false;
             }
         }
         return 0;
@@ -368,7 +371,7 @@ int WINAPI WinMain(HINSTANCE hPrevInstance, HINSTANCE hInstance, LPSTR lpCmdLine
     RECT resolution;
     GetWindowRect(GetDesktopWindow(), &resolution);
 
-    areaHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST, className, NULL,
+    areaHWND = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE, className, NULL,
        SWP_NOMOVE | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE | WS_MAXIMIZEBOX & ~WS_CAPTION, 0, 0, 
        resolution.right, resolution.bottom, NULL, NULL, hInstance, NULL);
     SetLayeredWindowAttributes(areaHWND, NULL, WORK_AREA_TRANSPARENCY_DISABLED, LWA_ALPHA);
@@ -423,7 +426,7 @@ LRESULT CALLBACK OptionsWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_CLOSE:
     {
         SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
-        SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
+        SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE);
         flagMainHWND = false;
         return 0;
     }
