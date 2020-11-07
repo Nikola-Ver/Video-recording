@@ -199,7 +199,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (frames.size() > 0 || flagRecording)
         {
             using namespace Magick;
-            if (frames.size() < maxFrames && frames.size() * numberOfPixelsPerFrame < MAX_NUMBER_OF_PIXELS && flagRecording)
+            if (frames.size() < maxFrames && frames.size() * numberOfPixelsPerFrame / (resolution * resolution) < MAX_NUMBER_OF_PIXELS && flagRecording)
             {
                 Image img("screenshot:");
                 img.crop(selectedArea);
