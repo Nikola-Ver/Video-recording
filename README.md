@@ -60,16 +60,15 @@ If you want to set automatic start, then move the folder with the program to dri
 
 The main advantage of this program is the ability to customize the recording (delays between frames, compression, etc.). Comparison:
 
-Standard software for screen recording in GIF format
-
+<p align="center">Standard software for screen recording in GIF format</p>
 <p align="center">
-<img src="report\img\other.gif">
+<img src="report\img\other.gif" width="317">
 </p>
 
-My program
+<p align="center">My program</p>
 
 <p align="center">
-<img src="report\img\my.gif">
+<img src="report\img\my.gif" width="317">
 </p>
 
 Also important is the simple, intuitive recording control with the ability to edit GIFs in ImagMagick.
