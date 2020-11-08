@@ -56,4 +56,22 @@ If you want to set automatic start, then move the folder with the program to dri
 <img src="report\img\move_to_startup.png">
 </p>
 
+### Benefits of the program over others
+
+The main advantage of this program is the ability to customize the recording (delays between frames, compression, etc.). Comparison:
+
+Standard software for screen recording in GIF format
+
+<p align="center">
+<img src="report\img\other.png">
+</p>
+
+My program
+
+<p align="center">
+<img src="report\img\my.png">
+</p>
+
+Also important is the simple, intuitive recording control with the ability to edit GIFs in ImagMagick.
+
 The program is easy to manage and install. Enjoy your use.
