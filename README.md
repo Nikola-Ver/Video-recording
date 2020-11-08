@@ -58,7 +58,7 @@ If you want to set automatic start, then move the folder with the program to dri
 
 ### Benefits of the program over others
 
-The main advantage of this program is the ability to customize the recording (delays between frames, compression, etc.). Comparison:
+The main advantage of this program is the ability to customize the recording (delays between frames, compression, etc.). Comparison (<a href="https://github.com/Nikola-Ver/Remote-computer-shutdown">Remote-computer-shutdown</a>):
 
 <p align="center">Standard software for screen recording in GIF format</p>
 <p align="center">
@@ -71,6 +71,4 @@ The main advantage of this program is the ability to customize the recording (de
 <img src="report\img\my.gif" width="317">
 </p>
 
-Also important is the simple, intuitive recording control with the ability to edit GIFs in ImagMagick.
-
-The program is easy to manage and install. Enjoy your use.
+Also important is the simple, intuitive recording control with the ability to edit GIFs in ImageMagick. The program is easy to manage and install. Enjoy your use.
