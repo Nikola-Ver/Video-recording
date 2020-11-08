@@ -63,13 +63,13 @@ The main advantage of this program is the ability to customize the recording (de
 Standard software for screen recording in GIF format
 
 <p align="center">
-<img src="report\img\other.png">
+<img src="report\img\other.gif">
 </p>
 
 My program
 
 <p align="center">
-<img src="report\img\my.png">
+<img src="report\img\my.gif">
 </p>
 
 Also important is the simple, intuitive recording control with the ability to edit GIFs in ImagMagick.
