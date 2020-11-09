@@ -109,7 +109,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 if (!flagMouseDown && areaIsReady)
                 {
                     flagRecording = !flagRecording;
-                    SetTimer(areaHWND, TIMER_ID, delay, NULL);
+                    if (flagRecording) SetTimer(areaHWND, TIMER_ID, delay, NULL);
                 }
             }
             else if (kbdStruct.vkCode == 86 && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_LWIN))
@@ -234,7 +234,6 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 MessageBox(NULL, L"Recording is over", L"Notification", MB_ICONINFORMATION);
                 UnHook();
                 areaIsReady = false;
-                if (flagRecording) HideAreaHWND();
 
                 std::time_t time = std::time(0);  
                 std::tm* now = std::localtime(&time);
