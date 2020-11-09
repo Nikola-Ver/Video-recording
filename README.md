@@ -1,4 +1,5 @@
-# Video-recording
+<h1 align="center">Video-recording</h1>
+<p align="center"><img src="report\img\logo.png"></p>
 
 This is a convenient program for recording screens in GIF format, which takes up little space and is easy to use.
 
