@@ -3,7 +3,7 @@
 
 This is a convenient program for recording screens in GIF format, which takes up little space and is easy to use.
 
-## How the program works
+<h2 align="center">How the program works</h2>
 
 ### How to use the program
 
