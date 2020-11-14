@@ -146,12 +146,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="options.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Video-recording.h" />
+    <ClInclude Include="windowFunctions.h">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="options.cpp" />
     <ClCompile Include="Video-recording.cpp" />
+    <ClCompile Include="windowFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Video-recording.rc" />

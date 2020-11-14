@@ -27,9 +27,21 @@
     <ClInclude Include="Video-recording.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="windowFunctions.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="options.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Video-recording.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="windowFunctions.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="options.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
