@@ -33,7 +33,6 @@ bool flagRecording = false;
 bool flagMouseDown = false;
 bool areaIsReady = false;
 bool flagMainHWND = false;
-bool flagWrite = false;
 bool flagInit = false;
 bool flagEscKey = false;
 
@@ -152,6 +151,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 catch (...)
                 {
                     flagRecording = false;
+                    KillTimer(areaHWND, TIMER_ID);
                     MessageBox(NULL, L"Can't start recording", L"ERROR", MB_ICONERROR);
                     return 0;
                 }
@@ -170,9 +170,9 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 img.animationDelay(delay / 10);
                 frames.push_back(img);
             }
-            else if (!flagWrite)
+            else
             {
-                flagWrite = true;
+                KillTimer(areaHWND, TIMER_ID);
                 MessageBox(NULL, L"Recording is over", L"Notification", MB_ICONINFORMATION);
                 UnHook();
                 areaIsReady = false;
@@ -200,9 +200,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (!flagRecording && !flagEscKey) areaIsReady = true;
                 flagRecording = false;
                 SetHook();
-                flagWrite = false;
                 flagEscKey = false;
-                KillTimer(areaHWND, TIMER_ID);
                 MessageBox(NULL, L"GIF is ready", L"Notification", MB_ICONINFORMATION);
             }
         }
@@ -212,6 +210,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         ReadOptionsFile();
         ResizeWnd(hWnd);
+        HideAreaHWND();
         return 0;
     }
     case WM_MOUSEMOVE:
@@ -250,6 +249,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_DESTROY:
     {
+        UnHook();
         WriteOptionsFile();
         PostQuitMessage(0);  
     }
