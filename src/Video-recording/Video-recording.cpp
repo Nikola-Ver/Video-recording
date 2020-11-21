@@ -110,6 +110,7 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
                 }
                 else
                 {
+                    WriteOptionsFile();
                     SetLayeredWindowAttributes(optionsHWND, NULL, MAIN_DISABLED, LWA_ALPHA);
                     SetWindowPos(optionsHWND, NULL, 0, 0, 413, 673, SWP_HIDEWINDOW);
                     SetWindowLong(optionsHWND, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOPMOST);
