@@ -153,7 +153,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 {
                     flagRecording = false;
                     KillTimer(areaHWND, TIMER_ID);
-                    MessageBox(NULL, L"Can't start recording", L"ERROR", MB_ICONERROR);
+                    MessageBox(NULL, L"Can't start recording", L"ERROR", MB_ICONERROR | MB_TOPMOST);
                     return 0;
                 }
                 img.crop(selectedArea);
@@ -174,7 +174,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             else
             {
                 KillTimer(areaHWND, TIMER_ID);
-                MessageBox(NULL, L"Recording is over", L"Notification", MB_ICONINFORMATION);
+                MessageBox(NULL, L"Recording is over", L"Notification", MB_ICONINFORMATION | MB_TOPMOST);
                 UnHook();
                 areaIsReady = false;
 
@@ -190,7 +190,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
                 catch (...)
                 {
-                    MessageBox(NULL, L"Make a GIFs folder to store GIF files", L"ERROR", MB_ICONERROR);
+                    MessageBox(NULL, L"Make a GIFs folder to store GIF files", L"ERROR", MB_ICONERROR | MB_TOPMOST);
                     pathToFile = "" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) +
                         "." + std::to_string(now->tm_year + 1900) + " (" + std::to_string(now->tm_hour) + "-" +
                         std::to_string(now->tm_min) + "-" + std::to_string(now->tm_sec) + ").gif";
@@ -202,7 +202,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 flagRecording = false;
                 SetHook();
                 flagEscKey = false;
-                MessageBox(NULL, L"GIF is ready", L"Notification", MB_ICONINFORMATION);
+                MessageBox(NULL, L"GIF is ready", L"Notification", MB_ICONINFORMATION | MB_TOPMOST);
             }
         }
         return 0;
@@ -210,8 +210,6 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
     {
         ReadOptionsFile();
-        ResizeWnd(hWnd);
-        HideAreaHWND();
         return 0;
     }
     case WM_MOUSEMOVE:
@@ -242,6 +240,8 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_SIZE:
     {     
+        ResizeWnd(hWnd);
+        HideAreaHWND();
         return 0;
     }
     case WM_CLOSE:

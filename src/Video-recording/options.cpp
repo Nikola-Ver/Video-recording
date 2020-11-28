@@ -171,7 +171,7 @@ inline void ReadOptionsFile()
     }
     catch (...)
     {
-        MessageBox(NULL, L"Cursor not found", L"ERROR", MB_ICONERROR);
+        MessageBox(NULL, L"Cursor not found", L"ERROR", MB_ICONERROR | MB_TOPMOST);
         flagCursorShow = false;
     }
 
