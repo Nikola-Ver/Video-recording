@@ -33,7 +33,7 @@ Run the Setup file (Setup.cmd) located in the "installation" folder. Then instal
 
 After installing ImageMagick, you can also use it as a GIF editor.
 
-Then install the program itself. Before using the program, set the screen scale to 100%.
+Then the installation window of the program itself appears, complete the installation. Before using the program, set the screen scale to 100%.
 
 ### Installing autorun
 
