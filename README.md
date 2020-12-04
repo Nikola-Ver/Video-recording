@@ -25,7 +25,7 @@ In order to open the settings window, you need to press the key combination "Shi
 
 ### Program installation
 
-Run the Setup file (Setup.cmd) located in the "installation" folder. Then install the ImageMagick along the path "C:\Program Files". It is important to select all installation options for the program during installation:
+Run the Setup file (Setup.vbs) located in the "installation" folder. Then install the ImageMagick along the path "C:\Program Files". It is important to select all installation options for the program during installation:
 
 <p align="center">
 <img src="report\img\magick_install.png">
@@ -37,7 +37,7 @@ Then the installation window of the program itself appears, complete the install
 
 ### Installing autorun
 
-Hold down the "Win" button and press the "R" button, enter "shell:startup" in the field that appears, then press "Enter". Then move there the file named Video-recording (Video-recording.bat), which is located in the "installation" folder. The program will now start automatically.
+Hold down the "Win" button and press the "R" button, enter "shell:startup" in the field that appears, then press "Enter". Then move there the file named Video-recording (Video-recording.vbs), which is located in the "installation" folder. The program will now start automatically.
 
 #### Step by step in photos
 
@@ -47,7 +47,7 @@ Hold down the "Win" button and press the "R" button, enter "shell:startup" in th
 <img src="report\img\enter_shell_startup.png">
 </p>
 
-2. Move Video-recording (Video-recording.bat) to the appeared startup folder
+2. Move Video-recording (Video-recording.vbs) to the appeared startup folder
 
 <p align="center">
 <img src="report\img\move_to_startup.png">
