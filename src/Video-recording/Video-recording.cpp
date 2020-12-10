@@ -180,7 +180,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 std::time_t time = std::time(0);  
                 std::tm* now = std::localtime(&time);
-                std::string pathToFile = "GIFs/" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) + 
+                std::string pathToFile = "GIFs/" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon + 1) + 
                     "." + std::to_string(now->tm_year + 1900) + " (" + std::to_string(now->tm_hour) + "-" + 
                     std::to_string(now->tm_min) + "-" + std::to_string(now->tm_sec) + ").gif";
 
@@ -191,7 +191,7 @@ LRESULT CALLBACK AreaWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 catch (...)
                 {
                     MessageBox(NULL, L"Make a GIFs folder to store GIF files", L"ERROR", MB_ICONERROR | MB_TOPMOST);
-                    pathToFile = "" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon) +
+                    pathToFile = "" + std::to_string(now->tm_mday) + "." + std::to_string(now->tm_mon + 1) +
                         "." + std::to_string(now->tm_year + 1900) + " (" + std::to_string(now->tm_hour) + "-" +
                         std::to_string(now->tm_min) + "-" + std::to_string(now->tm_sec) + ").gif";
                     writeImages(frames.begin(), frames.end(), pathToFile);
