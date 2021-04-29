@@ -1,4 +1,3 @@
-<h1 align="center">Video-recording</h1>
 <a href="report\docs\note.pdf">
 <p align="center"><img src="report\img\logo.gif" width="250"></p>
 </a>
