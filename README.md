@@ -1,5 +1,5 @@
 <a href="report\docs\note.pdf">
-<p align="center"><img src="report\img\logo.gif" width="250"></p>
+<p align="center"><img src="report\img\logo.gif"></p>
 </a>
 
 This is a convenient program for recording screens in GIF format, which takes up little space and is easy to use.
